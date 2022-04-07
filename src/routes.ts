@@ -8,7 +8,7 @@ import type {
 } from 'fastify';
 
 import { sql } from 'slonik';
-import { withConnection } from './withConnection';
+import { slonikConnection } from './slonikConnection';
 
 import type { Server, IncomingMessage, ServerResponse } from 'http';
 import type { ZodTypeProvider } from './zodFastifyTypeProvider';
@@ -42,24 +42,18 @@ const routes: RoutesFn = (app, _, done) => {
       response: {
         200: z.object({
           message: z.string(),
+          rows: z.array(z.any()),
         }),
       },
     },
     async handler(request, reply) {
       request.log.info('foo');
 
-      // TODO: We should be able to replace this with a `Proxy` to these methods.
-      //
-      // e.g.
-      //
-      // const foo = await connection.query(sql`SELECT * FROM foo`);
-      //
-      const foo = await withConnection((connection) => {
-        return connection.query(sql`SELECT * FROM foo`);
-      });
+      const results = await slonikConnection.query(sql`SELECT * FROM foo`);
 
-      reply.send({
+      return reply.send({
         message: `Hello ${request.query.name}`,
+        rows: [...results.rows],
       });
     },
   });
