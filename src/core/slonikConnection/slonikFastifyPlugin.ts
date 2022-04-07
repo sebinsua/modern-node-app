@@ -1,27 +1,9 @@
 // Inlined from https://github.com/autotelic/fastify-slonik
 import { createPool } from 'slonik';
-
-import type {
-  FastifyInstance,
-  FastifyLoggerInstance,
-  FastifyTypeProviderDefault,
-  FastifyPluginOptions,
-} from 'fastify';
 import { requestContext } from 'fastify-request-context';
-import type { Server, IncomingMessage, ServerResponse } from 'http';
-import type { DatabasePool } from 'slonik';
 
-export type PluginFn = (
-  app: FastifyInstance<
-    Server,
-    IncomingMessage,
-    ServerResponse,
-    FastifyLoggerInstance,
-    FastifyTypeProviderDefault
-  >,
-  options: FastifyPluginOptions,
-  done: (err?: Error | undefined) => void
-) => void;
+import type { DatabasePool } from 'slonik';
+import type { PluginFn } from '../PluginFn';
 
 declare module 'fastify' {
   export interface FastifyInstance {

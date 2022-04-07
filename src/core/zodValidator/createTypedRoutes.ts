@@ -4,9 +4,19 @@ import type {
   FastifyPluginOptions,
   FastifyTypeProviderDefault,
 } from 'fastify';
+import {
+  fastifyZod,
+  zodSerializerCompiler,
+  zodValidatorCompiler,
+} from './zodFastifyPlugin';
 
 import type { Server, IncomingMessage, ServerResponse } from 'http';
-import type { ZodTypeProvider } from './zodFastifyTypeProvider';
+import type { FastifyTypeProvider } from 'fastify';
+import type { z, ZodTypeAny } from 'zod';
+
+export interface ZodTypeProvider extends FastifyTypeProvider {
+  output: this['input'] extends ZodTypeAny ? z.infer<this['input']> : never;
+}
 
 export type RoutesFn = (
   app: FastifyInstance<
@@ -20,6 +30,11 @@ export type RoutesFn = (
   done: (err?: Error | undefined) => void
 ) => void;
 
+export interface CreateTypedRoutesOptions {
+  title: string;
+  description: string;
+}
+
 export function createTypedRoutes(
   applyRoutes: (
     typedApp: FastifyInstance<
@@ -29,10 +44,15 @@ export function createTypedRoutes(
       FastifyLoggerInstance,
       ZodTypeProvider
     >
-  ) => void
+  ) => void,
+  options: CreateTypedRoutesOptions
 ): RoutesFn {
   return (app, _, done) => {
-    const typedApp = app.withTypeProvider<ZodTypeProvider>();
+    const typedApp = app
+      .setValidatorCompiler(zodValidatorCompiler)
+      .setSerializerCompiler(zodSerializerCompiler)
+      .register(fastifyZod, options)
+      .withTypeProvider<ZodTypeProvider>();
 
     applyRoutes(typedApp);
 

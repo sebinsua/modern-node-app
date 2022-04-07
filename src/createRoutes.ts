@@ -4,11 +4,16 @@ import { sql } from 'slonik';
 import { createTypedRoutes } from './core';
 import { connection } from './database';
 
-export function createRoutes() {
+export interface CreateRoutesOptions {
+  title: string;
+  description: string;
+}
+
+export function createRoutes(options: CreateRoutesOptions) {
   return createTypedRoutes((app) => {
     app.route({
       method: 'GET',
-      url: '/',
+      url: '/word',
       schema: {
         operationId: 'getRoot',
         summary: 'Get root',
@@ -27,7 +32,7 @@ export function createRoutes() {
       async handler(request, reply) {
         request.log.info('foo');
 
-        const results = await connection.query(sql`SELECT * FROM foo`);
+        const results = await connection.query(sql`SELECT * FROM users`);
 
         return reply.send({
           message: `Hello ${request.query.name}`,
@@ -35,5 +40,5 @@ export function createRoutes() {
         });
       },
     });
-  });
+  }, options);
 }
