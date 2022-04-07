@@ -1,27 +1,9 @@
 // Inlined from https://github.com/autotelic/fastify-slonik
+import fp from 'fastify-plugin';
 import { createPool } from 'slonik';
-
-import type {
-  FastifyInstance,
-  FastifyLoggerInstance,
-  FastifyTypeProviderDefault,
-  FastifyPluginOptions,
-} from 'fastify';
 import { requestContext } from 'fastify-request-context';
-import type { Server, IncomingMessage, ServerResponse } from 'http';
-import type { DatabasePool } from 'slonik';
 
-export type PluginFn = (
-  app: FastifyInstance<
-    Server,
-    IncomingMessage,
-    ServerResponse,
-    FastifyLoggerInstance,
-    FastifyTypeProviderDefault
-  >,
-  options: FastifyPluginOptions,
-  done: (err?: Error | undefined) => void
-) => void;
+import type { DatabasePool } from 'slonik';
 
 declare module 'fastify' {
   export interface FastifyInstance {
@@ -34,7 +16,7 @@ declare module 'fastify-request-context' {
   }
 }
 
-export const fastifySlonik: PluginFn = async (app, options) => {
+export const fastifySlonik = fp(async (app, options: any) => {
   const { connectionString, poolOptions = {} } = options;
   const connectionPool = createPool(connectionString, poolOptions);
 
@@ -58,7 +40,7 @@ export const fastifySlonik: PluginFn = async (app, options) => {
     await app.close();
     process.exit(1);
   }
-};
+});
 
 export function getConnectionPool() {
   const connectionPool = requestContext.get('slonikConnectionPool');

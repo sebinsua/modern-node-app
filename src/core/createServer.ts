@@ -1,121 +1,77 @@
 import { fastify as createFastify } from 'fastify';
 import { fastifyRequestContextPlugin } from 'fastify-request-context';
 
-import swagger from 'fastify-swagger';
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import { Roarr, getLogLevelName } from 'roarr';
+import customHealthCheck from 'fastify-custom-healthcheck';
 import { createFastifyLogger } from '@roarr/fastify';
 import { randomUUID } from 'crypto';
 
-import { serializeMessage } from './roarrSerializeMessage';
-import {
-  serializerCompiler,
-  validatorCompiler,
-} from './zodFastifyTypeProvider';
-import { fastifySlonik } from './slonikFastifyPlugin';
+import { sql } from 'slonik';
+import { connection } from '../database';
+import { serverLog } from './roarrLogger';
+import { fastifySlonik } from './slonikConnection';
+import { fastifyZod, RoutesFn } from './zodValidator';
 
-import type { RoutesFn } from './createTypedRoutes';
+import type { ClientConfiguration } from 'slonik';
 
-// @ts-ignore
-const ROARR = (globalThis.ROARR = globalThis.ROARR || {});
+export interface CreateServerOptions {
+  name: string;
+  description: string;
+  prefix: string;
+  slonik: {
+    connectionString: string;
+    poolOptions?: Partial<ClientConfiguration>;
+  };
+}
 
-ROARR.serializeMessage = serializeMessage;
-
-export const serverLog = Roarr.child((message) => ({
-  level: getLogLevelName(Number(message.context['logLevel'])).toUpperCase(),
-  timestamp: new Date(message.time).toISOString(),
-  ...message,
-  context: {
-    ...message.context,
-    application: 'server',
-  },
-}));
-
-export function createServer(routes: RoutesFn) {
+export async function createServer(
+  routes: RoutesFn,
+  options: CreateServerOptions
+) {
   const requestIdLogLabel = 'requestId';
 
   const app = createFastify({
     logger: createFastifyLogger(serverLog, { requestIdLogLabel }),
     requestIdLogLabel,
+    ignoreTrailingSlash: true,
   });
 
-  app.setValidatorCompiler(validatorCompiler);
-  app.setSerializerCompiler(serializerCompiler);
+  await app.register(fastifyRequestContextPlugin);
+  app
+    .addHook('onRequest', (request, _, done) => {
+      const correlationId = request.headers['correlation-id'] ?? randomUUID();
+      request.requestContext.set('correlationId', correlationId);
+      done();
+    })
+    .addHook('preHandler', (request, _, done) => {
+      const correlationId = request.requestContext.get('correlationId');
+      void serverLog.adopt(() => done(), { correlationId });
+    });
 
-  // @ts-ignore
-  app.register(swagger, {
-    exposeRoute: true,
-    openapi: {
-      info: {
-        title: 'API',
-        description: 'API Docs',
-      },
+  await app.register(fastifySlonik, options.slonik);
+
+  await app.register(
+    async (instance) => {
+      await instance.register(customHealthCheck);
+      instance.addHealthCheck('postgresql', () =>
+        connection.exists(sql`SELECT 1 as "one"`)
+      );
+
+      instance.get('/kill', async (_, reply) => {
+        reply.send({
+          message: 'Server killed!',
+        });
+
+        await app.close();
+
+        process.exit(0);
+      });
+
+      await instance.register(fastifyZod, options);
+
+      await instance.register(routes);
     },
-    transform({ schema, url }) {
-      const transformedUrl = url;
-      const {
-        params,
-        body,
-        querystring,
-        headers,
-        response,
-        ...transformedSchema
-      } = schema;
-
-      if (params) {
-        // @ts-ignore
-        transformedSchema.params = zodToJsonSchema(params as any);
-      }
-      if (body) {
-        // @ts-ignore
-        transformedSchema.body = zodToJsonSchema(body as any);
-      }
-      if (querystring) {
-        // @ts-ignore
-        transformedSchema.querystring = zodToJsonSchema(querystring as any);
-      }
-      if (headers) {
-        // @ts-ignore
-        transformedSchema.headers = zodToJsonSchema(headers as any);
-      }
-      if (response) {
-        // @ts-ignore
-        transformedSchema.response = Object.fromEntries(
-          Object.entries(response as any).map(
-            ([statusCode, statusResponse]) => [
-              statusCode,
-              zodToJsonSchema(statusResponse as any),
-            ]
-          )
-        );
-      }
-
-      return {
-        url: transformedUrl,
-        schema: transformedSchema,
-      };
-    },
-  });
-
-  app.register(fastifyRequestContextPlugin);
-  app.addHook('onRequest', (request, _, done) => {
-    request.requestContext.set(
-      'correlationId',
-      request.headers['correlation-id'] ?? randomUUID()
-    );
-    done();
-  });
-  app.addHook('preHandler', (request, _, done) => {
-    const correlationId = request.requestContext.get('correlationId');
-    void serverLog.adopt(() => done(), { correlationId });
-  });
-
-  app.register(fastifySlonik, {
-    connectionString: '',
-    poolOptions: {},
-  });
-
-  app.register(routes);
+    { prefix: options.prefix }
+  );
 
   return app;
 }

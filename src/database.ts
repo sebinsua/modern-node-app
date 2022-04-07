@@ -1,3 +1,1 @@
-import { slonikConnection } from './core';
-
-export const connection = slonikConnection;
+export { slonikConnection as connection } from './core/slonikConnection';

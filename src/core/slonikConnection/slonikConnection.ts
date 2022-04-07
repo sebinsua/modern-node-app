@@ -1,4 +1,5 @@
 import { getConnectionPool } from './slonikFastifyPlugin';
+
 import type { DatabasePool, DatabasePoolConnection } from 'slonik';
 
 export const withConnection: DatabasePool['connect'] = function withConnection(

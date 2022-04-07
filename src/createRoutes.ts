@@ -27,11 +27,13 @@ export function createRoutes() {
       async handler(request, reply) {
         request.log.info('foo');
 
-        const results = await connection.query(sql`SELECT * FROM foo`);
+        const rows = await connection.many(
+          sql`SELECT * FROM pg_catalog.pg_tables;`
+        );
 
         return reply.send({
           message: `Hello ${request.query.name}`,
-          rows: [...results.rows],
+          rows: [...rows],
         });
       },
     });
