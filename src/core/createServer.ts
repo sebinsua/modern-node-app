@@ -12,7 +12,7 @@ import {
   validatorCompiler,
 } from './zodFastifyTypeProvider';
 
-import type { RoutesFn } from './routes';
+import type { RoutesFn } from './createTypedRoutes';
 
 export const serverLog = Roarr.child({
   program: 'server',

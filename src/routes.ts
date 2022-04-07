@@ -1,33 +1,10 @@
 import { z } from 'zod';
-
-import type {
-  FastifyInstance,
-  FastifyLoggerInstance,
-  FastifyPluginOptions,
-  FastifyTypeProviderDefault,
-} from 'fastify';
-
 import { sql } from 'slonik';
-import { slonikConnection } from './slonikConnection';
 
-import type { Server, IncomingMessage, ServerResponse } from 'http';
-import type { ZodTypeProvider } from './zodFastifyTypeProvider';
+import { createTypedRoutes } from './core';
+import { connection } from './database';
 
-export type RoutesFn = (
-  app: FastifyInstance<
-    Server,
-    IncomingMessage,
-    ServerResponse,
-    FastifyLoggerInstance,
-    FastifyTypeProviderDefault
-  >,
-  options: FastifyPluginOptions,
-  done: (err?: Error | undefined) => void
-) => void;
-
-const routes: RoutesFn = (app, _, done) => {
-  const typedApp = app.withTypeProvider<ZodTypeProvider>();
-
+export default createTypedRoutes((typedApp) => {
   typedApp.route({
     method: 'GET',
     url: '/',
@@ -49,7 +26,7 @@ const routes: RoutesFn = (app, _, done) => {
     async handler(request, reply) {
       request.log.info('foo');
 
-      const results = await slonikConnection.query(sql`SELECT * FROM foo`);
+      const results = await connection.query(sql`SELECT * FROM foo`);
 
       return reply.send({
         message: `Hello ${request.query.name}`,
@@ -57,8 +34,4 @@ const routes: RoutesFn = (app, _, done) => {
       });
     },
   });
-
-  done();
-};
-
-export default routes;
+});
