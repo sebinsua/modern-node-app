@@ -35,19 +35,8 @@ declare module 'fastify-request-context' {
 }
 
 export const fastifySlonik: PluginFn = async (app, options) => {
-  const { connectionString, poolOpts = {} } = options;
-  const connectionPool = createPool(connectionString, poolOpts);
-
-  // Test the connection is viable...
-  try {
-    await connectionPool.connect(async (_) => {
-      app.log.info(`Connected to Postgres database at ${connectionString}`);
-    });
-  } catch (err) {
-    app.log.fatal(err);
-    await app.close();
-    process.exit(1);
-  }
+  const { connectionString, poolOptions = {} } = options;
+  const connectionPool = createPool(connectionString, poolOptions);
 
   app.decorate('slonikConnectionPool', connectionPool);
   app.addHook('onRequest', (request, _, done) => {
@@ -58,6 +47,17 @@ export const fastifySlonik: PluginFn = async (app, options) => {
   app.addHook('onClose', async () => {
     await connectionPool.end();
   });
+
+  // Test that the database connection is viable.
+  try {
+    await connectionPool.connect(async (_) => {
+      app.log.info(`Connected to Postgres database at ${connectionString}`);
+    });
+  } catch (err) {
+    app.log.fatal(err);
+    await app.close();
+    process.exit(1);
+  }
 };
 
 export function getConnectionPool() {

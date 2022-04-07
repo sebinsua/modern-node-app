@@ -3,20 +3,33 @@ import { fastifyRequestContextPlugin } from 'fastify-request-context';
 
 import swagger from 'fastify-swagger';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { Roarr } from 'roarr';
+import { Roarr, getLogLevelName } from 'roarr';
 import { createFastifyLogger } from '@roarr/fastify';
 import { randomUUID } from 'crypto';
 
+import { serializeMessage } from './roarrSerializeMessage';
 import {
   serializerCompiler,
   validatorCompiler,
 } from './zodFastifyTypeProvider';
+import { fastifySlonik } from './slonikFastifyPlugin';
 
 import type { RoutesFn } from './createTypedRoutes';
 
-export const serverLog = Roarr.child({
-  program: 'server',
-});
+// @ts-ignore
+const ROARR = (globalThis.ROARR = globalThis.ROARR || {});
+
+ROARR.serializeMessage = serializeMessage;
+
+export const serverLog = Roarr.child((message) => ({
+  level: getLogLevelName(Number(message.context['logLevel'])).toUpperCase(),
+  timestamp: new Date(message.time).toISOString(),
+  ...message,
+  context: {
+    ...message.context,
+    application: 'server',
+  },
+}));
 
 export function createServer(routes: RoutesFn) {
   const requestIdLogLabel = 'requestId';
@@ -95,6 +108,11 @@ export function createServer(routes: RoutesFn) {
   app.addHook('preHandler', (request, _, done) => {
     const correlationId = request.requestContext.get('correlationId');
     void serverLog.adopt(() => done(), { correlationId });
+  });
+
+  app.register(fastifySlonik, {
+    connectionString: '',
+    poolOptions: {},
   });
 
   app.register(routes);
