@@ -14,6 +14,9 @@ const fastStringify = fastJson({
     sequence: {
       type: 'string',
     },
+    time: {
+      type: 'number',
+    },
     timestamp: {
       type: 'string',
       format: 'date-time',
