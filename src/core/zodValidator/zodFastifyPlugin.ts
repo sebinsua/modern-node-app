@@ -4,8 +4,34 @@ import swagger from 'fastify-swagger';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import type { FastifySchemaCompiler } from 'fastify';
-import type { FastifySerializerCompiler } from 'fastify/types/schema';
+import type {
+  FastifySchemaValidationError,
+  FastifySerializerCompiler,
+} from 'fastify/types/schema';
 import type { ZodAny } from 'zod';
+
+export type SchemaErrorFormatterFn = (
+  errors: FastifySchemaValidationError[],
+  dataVar: string
+) => Error;
+
+// TODO: This isn't being called and needs to be rewritten for `zod`.
+//       There's potentially a bug in the alpha of `fastify` that needs
+//       to be resolved for it to be used.
+export const zodSchemaErrorFormatter: SchemaErrorFormatterFn = (
+  errors,
+  dataVar
+) => {
+  const separator = ', ';
+
+  let text = '';
+  for (var i = 0; i !== errors.length; ++i) {
+    const e = errors[i];
+    text += dataVar + (e?.instancePath || '') + ' ' + e?.message + separator;
+  }
+
+  return new Error(text.slice(0, -separator.length));
+};
 
 export const zodValidatorCompiler: FastifySchemaCompiler<ZodAny> =
   ({ schema }) =>

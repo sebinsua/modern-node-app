@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "description": "A modern Node app",
   "scripts": {
-    "dev": "ROARR_LOG=true tsnd --transpile-only src/startServer.ts | roarr pretty-print",
-    "start": "ROARR_LOG=true ts-node --transpileOnly src/startServer.ts",
+    "dev": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true tsnd --transpile-only src/startServer.ts | roarr pretty-print",
+    "start": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true ts-node --transpile-only src/startServer.ts",
     "test": "jest --watch"
   },
   "author": "Seb Insua",
@@ -15,6 +15,7 @@
     "@types/jest": "^27.4.1",
     "@types/node": "^17.0.23",
     "@types/roarr": "^2.14.3",
+    "dotenv": "^16.0.0",
     "fastify": "^4.0.0-alpha.3",
     "fastify-custom-healthcheck": "^2.0.0",
     "fastify-error": "^1.1.0",

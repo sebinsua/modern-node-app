@@ -1,12 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { z } from 'zod';
 import { serializeError } from 'serialize-error';
 import { createQueryLoggingInterceptor } from 'slonik-interceptor-query-logging';
 
 import { serverLog } from './logger';
-import { createServer } from './core';
+import { createServer, getConfig } from './core';
 import { createRoutes } from './createRoutes';
+
+import type { Interceptor } from 'slonik';
 
 process.on('uncaughtException', (error, origin) => {
   serverLog.fatal(
@@ -20,27 +23,48 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-const packageJson = JSON.parse(
-  fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8')
-);
-
 (async () => {
-  const mainRoutes = createRoutes();
-
-  const app = await createServer(mainRoutes, {
-    name: packageJson.name,
-    description: `The \`${packageJson.name}\` API`,
-    prefix: '/api',
-    slonik: {
-      connectionString: 'postgres://localhost:5432/postgres',
-      poolOptions: {
-        interceptors: [createQueryLoggingInterceptor()],
-      },
-    },
-  });
-
   try {
-    await app.listen({ port: 3000, host: '0.0.0.0' });
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8')
+    );
+    const config = getConfig(
+      z.object({
+        APP_HOST: z.string(),
+        APP_PORT: z.string().regex(/^\d+$/),
+        APP_BASE_URL: z.string(),
+        APP_POSTGRES_CONNECTION_STRING: z.string().url(),
+        APP_POSTGRES_QUERY_LOGGING: z
+          .union([z.literal('true'), z.literal('false')])
+          .default('false'),
+      })
+    );
+
+    const mainRoutes = createRoutes();
+
+    const app = await createServer(mainRoutes, {
+      name: packageJson.name,
+      description: `The \`${packageJson.name}\` API`,
+      prefix: config.APP_BASE_URL,
+      slonik: {
+        connectionString: config.APP_POSTGRES_CONNECTION_STRING,
+        poolOptions: {
+          interceptors: [
+            config.APP_POSTGRES_QUERY_LOGGING === 'true'
+              ? createQueryLoggingInterceptor()
+              : undefined,
+          ].filter(
+            (interceptor): interceptor is Interceptor =>
+              interceptor !== undefined
+          ),
+        },
+      },
+    });
+
+    await app.listen({
+      host: config.APP_HOST,
+      port: Number(config.APP_PORT),
+    });
   } catch (error) {
     serverLog.fatal({ error: serializeError(error) }, 'Error starting server!');
     process.exit(1);
