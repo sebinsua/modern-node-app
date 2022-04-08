@@ -191,15 +191,7 @@ export type ApiFetchOptions<ValidResponseType> = FetchWithAuthOptions & {
 /**
  * `fetchApi` calls `fetchWithAuth` and validates its response using [a **mandatory** `Validator`](https://github.com/colinhacks/zod).
  *
- * It produces runtime errors if there are mismatches between the responses produced by our
- * backend APIs and our types.
- *
- * This means that:
- *
- * - It's more obvious when changes to the backend API responses need updates to the types in `aim-client`.
- * - Any bugs on the backend APIs that cause unexpected values to come back will be easier to notice and fix.
- * - Because our integration/unit tests are also typed, any invalid mock responses in these have to be updated
- *   which reduces the chance of zombie tests that succeed even when the client-side logic is wrong.
+ * It produces runtime errors if there are mismatches between the responses produced by backend APIs and types.
  */
 export async function fetchApi<
   /**
