@@ -1,4 +1,6 @@
 import { fetch } from 'undici';
+import { randomUUID } from 'crypto';
+import { requestContext } from 'fastify-request-context';
 
 import { dedupeError, logger } from './logger';
 
@@ -42,13 +44,15 @@ class HttpClientError extends Error {
 
 export type FetchWithAuthOptions = RequestInit & {
   json?: Record<string, any>;
-  authRedirect?: boolean;
 };
 
-export async function fetchWithAuth<TReturnValue = any>(
+async function fetchWithAuth<TReturnValue = any>(
   endpoint: string,
-  { json, authRedirect = true, ...customOptions }: FetchWithAuthOptions = {}
+  { json, ...customOptions }: FetchWithAuthOptions = {}
 ): Promise<TReturnValue> {
+  const requestId = randomUUID();
+  const correlationId = requestContext.get('correlationId');
+
   const options: RequestInit = {
     method: 'GET',
     mode: 'cors',
@@ -57,6 +61,8 @@ export async function fetchWithAuth<TReturnValue = any>(
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      'Request-Id': requestId,
+      'Correlation-Id': correlationId,
       ...customOptions.headers,
     },
   };
@@ -69,7 +75,7 @@ export async function fetchWithAuth<TReturnValue = any>(
 
   const method = options.method;
 
-  if (response.status === 401 && authRedirect) {
+  if (response.status === 401) {
     throw new HttpClientError(
       `Unauthenticated ${method} request to ${endpoint}`,
       {
