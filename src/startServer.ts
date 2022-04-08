@@ -4,7 +4,7 @@ import * as path from 'path';
 import { serializeError } from 'serialize-error';
 import { createQueryLoggingInterceptor } from 'slonik-interceptor-query-logging';
 
-import { serverLog } from './core/roarrLogger';
+import { serverLog } from './logger';
 import { createServer } from './core';
 import { createRoutes } from './createRoutes';
 
