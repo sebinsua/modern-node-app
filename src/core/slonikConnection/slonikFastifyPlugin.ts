@@ -3,7 +3,7 @@ import fp from 'fastify-plugin';
 import { createPool } from 'slonik';
 import { requestContext } from 'fastify-request-context';
 
-import type { DatabasePool } from 'slonik';
+import type { DatabasePool, ClientConfiguration } from 'slonik';
 
 declare module 'fastify' {
   export interface FastifyInstance {
@@ -14,6 +14,11 @@ declare module 'fastify-request-context' {
   interface RequestContextData {
     slonikConnectionPool: DatabasePool;
   }
+}
+
+export interface FastifySlonikOptions {
+  connectionString: string;
+  poolOptions?: Partial<ClientConfiguration>;
 }
 
 export const fastifySlonik = fp(async (app, options: any) => {

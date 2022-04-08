@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { serializeError } from 'serialize-error';
+import { createQueryLoggingInterceptor } from 'slonik-interceptor-query-logging';
 
 import { serverLog } from './core/roarrLogger';
 import { createServer } from './core';
@@ -32,6 +33,9 @@ const packageJson = JSON.parse(
     prefix: '/api',
     slonik: {
       connectionString: 'postgres://localhost:5432/postgres',
+      poolOptions: {
+        interceptors: [createQueryLoggingInterceptor()],
+      },
     },
   });
 
