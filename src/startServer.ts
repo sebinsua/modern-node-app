@@ -34,6 +34,9 @@ process.on('unhandledRejection', (reason) => {
         APP_POSTGRES_QUERY_LOGGING: z
           .union([z.literal('true'), z.literal('false')])
           .default('false'),
+        APP_CORS_CREDENTIALS: z
+          .union([z.literal('true'), z.literal('false')])
+          .default('true'),
         APP_CORS_ORIGIN: z.string().optional(),
       })
     );
@@ -56,7 +59,7 @@ process.on('unhandledRejection', (reason) => {
         },
       },
       cors: {
-        credentials: true,
+        credentials: config.APP_CORS_CREDENTIALS !== 'false',
         origin:
           typeof config.APP_CORS_ORIGIN === 'string'
             ? config.APP_CORS_ORIGIN.split(',')
