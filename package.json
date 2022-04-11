@@ -9,7 +9,7 @@
     "dev": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true tsnd --transpile-only src/startServer.ts | roarr pretty-print",
     "start": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true ts-node --transpile-only src/startServer.ts",
     "test": "jest --watch",
-    "generate-types": "slonik-typegen generate"
+    "generate-types": "slonik-typegen generate --connection-uri postgres://localhost:5432/postgres"
   },
   "author": "Seb Insua",
   "license": "MIT",
