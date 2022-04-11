@@ -12,6 +12,7 @@ import { fastifyZod, RoutesPluginFn } from './zodValidator';
 import type { ClientConfiguration } from 'slonik';
 
 import type { FastifyCorsOptions } from 'fastify-cors';
+
 export interface CreateServerOptions {
   name: string;
   description: string;
