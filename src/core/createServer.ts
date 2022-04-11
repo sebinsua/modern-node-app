@@ -1,9 +1,11 @@
 import { fastify as createFastify } from 'fastify';
+import gracefulShutdown from 'http-graceful-shutdown';
 import fastifyCors from 'fastify-cors';
 import { fastifyRequestContextPlugin } from 'fastify-request-context';
 import customHealthCheck from 'fastify-custom-healthcheck';
 import { createFastifyLogger } from '@roarr/fastify';
 import { randomUUID } from 'crypto';
+import { serializeError } from 'serialize-error';
 
 import { serverLog } from './roarrLogger';
 import { checkDatabaseConnection, fastifySlonik } from './slonikConnection';
@@ -36,6 +38,12 @@ export async function createServer(
     ignoreTrailingSlash: true,
   });
 
+  const shutdown = gracefulShutdown(app.server, {
+    finally() {
+      serverLog.info('Graceful shutdown of the server completed');
+    },
+  });
+
   await app.register(fastifyRequestContextPlugin);
   app
     .addHook('onRequest', (request, _, done) => {
@@ -59,14 +67,25 @@ export async function createServer(
       });
       instance.addHealthCheck('postgresql', checkDatabaseConnection);
 
-      instance.get('/kill', async (_, reply) => {
+      instance.get('/kill', async (request, reply) => {
         reply.send({
           message: 'Server killed!',
         });
 
-        await app.close();
+        const FORCE_KILL_WAIT = 5_000;
 
-        process.exit(0);
+        let isError = false;
+        try {
+          await shutdown();
+        } catch (error) {
+          isError = true;
+          request.log.error(
+            { error: serializeError(error) },
+            'Error while gracefully shutting down the server!'
+          );
+        } finally {
+          setTimeout(() => process.exit(isError ? 1 : 0), FORCE_KILL_WAIT);
+        }
       });
 
       await instance.register(fastifyZod, options);
