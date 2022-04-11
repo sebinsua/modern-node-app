@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true tsnd --transpile-only src/startServer.ts | roarr pretty-print",
     "start": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true ts-node --transpile-only src/startServer.ts",
-    "test": "jest --watch"
+    "test": "jest --watch",
+    "generate-types": "slonik-typegen generate"
   },
   "author": "Seb Insua",
   "license": "MIT",
@@ -38,6 +39,7 @@
   },
   "devDependencies": {
     "@roarr/cli": "^5.3.2",
+    "@slonik/typegen": "^0.12.0",
     "husky": "^7.0.4",
     "jest": "^27.5.1",
     "patch-package": "^6.4.7",
