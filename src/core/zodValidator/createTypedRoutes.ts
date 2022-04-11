@@ -18,7 +18,7 @@ export interface ZodTypeProvider extends FastifyTypeProvider {
   output: this['input'] extends ZodTypeAny ? z.infer<this['input']> : never;
 }
 
-export type RoutesFn = (
+export type RoutesPluginFn = (
   app: FastifyInstance<
     Server,
     IncomingMessage,
@@ -30,7 +30,7 @@ export type RoutesFn = (
   done: (err?: Error | undefined) => void
 ) => void;
 
-export function createTypedRoutes(
+export function createTypedRoutesPlugin(
   applyRoutes: (
     typedApp: FastifyInstance<
       Server,
@@ -38,10 +38,12 @@ export function createTypedRoutes(
       ServerResponse,
       FastifyLoggerInstance,
       ZodTypeProvider
-    >
+    >,
+    options: FastifyPluginOptions,
+    done: (err?: Error | undefined) => void
   ) => void
-): RoutesFn {
-  return (app, _, done) => {
+): RoutesPluginFn {
+  return (app, options, done) => {
     app
       .setSchemaErrorFormatter(zodSchemaErrorFormatter)
       .setValidatorCompiler(zodValidatorCompiler)
@@ -49,8 +51,6 @@ export function createTypedRoutes(
 
     const typedApp = app.withTypeProvider<ZodTypeProvider>();
 
-    applyRoutes(typedApp);
-
-    done();
+    applyRoutes(typedApp, options, done);
   };
 }

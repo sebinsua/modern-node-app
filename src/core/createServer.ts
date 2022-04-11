@@ -5,11 +5,9 @@ import customHealthCheck from 'fastify-custom-healthcheck';
 import { createFastifyLogger } from '@roarr/fastify';
 import { randomUUID } from 'crypto';
 
-import { sql } from 'slonik';
-import { connection } from '../database';
 import { serverLog } from './roarrLogger';
-import { fastifySlonik } from './slonikConnection';
-import { fastifyZod, RoutesFn } from './zodValidator';
+import { checkDatabaseConnection, fastifySlonik } from './slonikConnection';
+import { fastifyZod, RoutesPluginFn } from './zodValidator';
 
 import type { ClientConfiguration } from 'slonik';
 
@@ -24,7 +22,7 @@ export interface CreateServerOptions {
 }
 
 export async function createServer(
-  routes: RoutesFn,
+  routesPlugin: RoutesPluginFn,
   options: CreateServerOptions
 ) {
   const requestIdLogLabel = 'requestId';
@@ -52,9 +50,7 @@ export async function createServer(
   await app.register(
     async (instance) => {
       await instance.register(customHealthCheck);
-      instance.addHealthCheck('postgresql', () =>
-        connection.exists(sql`SELECT 1 as "one"`)
-      );
+      instance.addHealthCheck('postgresql', checkDatabaseConnection);
 
       instance.get('/kill', async (_, reply) => {
         reply.send({
@@ -68,7 +64,7 @@ export async function createServer(
 
       await instance.register(fastifyZod, options);
 
-      await instance.register(routes);
+      await instance.register(routesPlugin);
     },
     { prefix: options.prefix }
   );

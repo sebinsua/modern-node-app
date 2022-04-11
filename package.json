@@ -2,6 +2,9 @@
   "name": "modern-node-app",
   "version": "0.0.0",
   "description": "A modern Node app",
+  "workspaces": [
+    "src/modules"
+  ],
   "scripts": {
     "dev": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true tsnd --transpile-only src/startServer.ts | roarr pretty-print",
     "start": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true ts-node --transpile-only src/startServer.ts",

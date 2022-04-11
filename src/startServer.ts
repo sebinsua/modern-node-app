@@ -5,9 +5,10 @@ import { z } from 'zod';
 import { serializeError } from 'serialize-error';
 import { createQueryLoggingInterceptor } from 'slonik-interceptor-query-logging';
 
-import { serverLog } from './logger';
+import { serverLog } from 'modules/logger';
+
 import { createServer, getConfig } from './core';
-import { createRoutes } from './createRoutes';
+import routes from './routes';
 
 import type { Interceptor } from 'slonik';
 
@@ -40,9 +41,7 @@ process.on('unhandledRejection', (reason) => {
       })
     );
 
-    const mainRoutes = createRoutes();
-
-    const app = await createServer(mainRoutes, {
+    const app = await createServer(routes, {
       name: packageJson.name,
       description: `The \`${packageJson.name}\` API`,
       prefix: config.APP_BASE_URL,
