@@ -54,7 +54,9 @@ export async function createServer(
 
   await app.register(
     async (instance) => {
-      await instance.register(customHealthCheck);
+      await instance.register(customHealthCheck, {
+        exposeFailure: process.env['NODE_ENV'] === 'development' ?? false,
+      });
       instance.addHealthCheck('postgresql', checkDatabaseConnection);
 
       instance.get('/kill', async (_, reply) => {
