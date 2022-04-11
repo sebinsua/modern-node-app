@@ -15,7 +15,7 @@ import type { FastifyCorsOptions } from 'fastify-cors';
 export interface CreateServerOptions {
   name: string;
   description: string;
-  prefix: string;
+  prefix?: string | undefined;
   slonik: {
     connectionString: string;
     poolOptions?: Partial<ClientConfiguration>;
@@ -70,7 +70,7 @@ export async function createServer(
 
       await instance.register(routesPlugin);
     },
-    { prefix: options.prefix }
+    options.prefix ? { prefix: options.prefix } : {}
   );
 
   return app;

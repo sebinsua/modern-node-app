@@ -29,7 +29,7 @@ process.on('unhandledRejection', (reason) => {
       z.object({
         APP_HOST: z.string(),
         APP_PORT: z.string().regex(/^\d+$/),
-        APP_BASE_URL: z.string(),
+        APP_BASE_URL: z.string().optional(),
         APP_POSTGRES_CONNECTION_STRING: z.string().url(),
         APP_POSTGRES_QUERY_LOGGING: z
           .union([z.literal('true'), z.literal('false')])
