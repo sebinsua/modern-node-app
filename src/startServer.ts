@@ -1,13 +1,10 @@
-import * as fs from 'fs';
-import * as path from 'path';
-
 import { z } from 'zod';
 import { serializeError } from 'serialize-error';
 import { createQueryLoggingInterceptor } from 'slonik-interceptor-query-logging';
 
 import { serverLog } from 'modules/logger';
 
-import { createServer, getConfig } from './core';
+import { getApplicationName, createServer, getConfig } from './core';
 import routes from './routes';
 
 import type { Interceptor } from 'slonik';
@@ -26,9 +23,8 @@ process.on('unhandledRejection', (reason) => {
 
 (async () => {
   try {
-    const packageJson = JSON.parse(
-      fs.readFileSync(path.join(__dirname, '../package.json'), 'utf8')
-    );
+    const applicationName = await getApplicationName();
+
     const config = getConfig(
       z.object({
         APP_HOST: z.string(),
@@ -42,8 +38,8 @@ process.on('unhandledRejection', (reason) => {
     );
 
     const app = await createServer(routes, {
-      name: packageJson.name,
-      description: `The \`${packageJson.name}\` API`,
+      name: applicationName,
+      description: `The \`${applicationName}\` API`,
       prefix: config.APP_BASE_URL,
       slonik: {
         connectionString: config.APP_POSTGRES_CONNECTION_STRING,

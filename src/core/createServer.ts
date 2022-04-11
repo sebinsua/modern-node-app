@@ -1,6 +1,6 @@
 import { fastify as createFastify } from 'fastify';
+import fastifyCors from 'fastify-cors';
 import { fastifyRequestContextPlugin } from 'fastify-request-context';
-
 import customHealthCheck from 'fastify-custom-healthcheck';
 import { createFastifyLogger } from '@roarr/fastify';
 import { randomUUID } from 'crypto';
@@ -11,6 +11,7 @@ import { fastifyZod, RoutesPluginFn } from './zodValidator';
 
 import type { ClientConfiguration } from 'slonik';
 
+import type { FastifyCorsOptions } from 'fastify-cors';
 export interface CreateServerOptions {
   name: string;
   description: string;
@@ -19,6 +20,7 @@ export interface CreateServerOptions {
     connectionString: string;
     poolOptions?: Partial<ClientConfiguration>;
   };
+  cors?: FastifyCorsOptions;
 }
 
 export async function createServer(
@@ -44,6 +46,8 @@ export async function createServer(
       const correlationId = request.requestContext.get('correlationId');
       void serverLog.adopt(() => done(), { correlationId });
     });
+
+  await app.register(fastifyCors, options.cors);
 
   await app.register(fastifySlonik, options.slonik);
 
