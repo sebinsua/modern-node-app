@@ -18,7 +18,18 @@ export default createTypedRoutesPlugin((app, _, done) => {
       response: {
         200: z.object({
           message: z.string(),
-          rows: z.array(z.any()),
+          rows: z.array(
+            z.object({
+              schemaname: z.string().nullable(),
+              tablename: z.string().nullable(),
+              tableowner: z.string().nullable(),
+              tablespace: z.string().nullable(),
+              hasindexes: z.boolean().nullable(),
+              hasrules: z.boolean().nullable(),
+              hastriggers: z.boolean().nullable(),
+              rowsecurity: z.boolean().nullable(),
+            })
+          ),
         }),
       },
     },
