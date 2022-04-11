@@ -1,5 +1,1 @@
-export {
-  slonikConnection as connection,
-  getConnectionPool,
-  withConnection,
-} from '../core/slonikConnection';
+export { slonikPool as pool } from '../core/slonikConnection';

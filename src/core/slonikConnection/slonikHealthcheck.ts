@@ -1,9 +1,9 @@
 import { sql } from 'slonik';
 
-import { connection } from 'modules/database';
+import { pool } from 'modules/database';
 
 export async function checkDatabaseConnection() {
-  return connection.exists(sql<queries.One>`SELECT 1 as "one"`);
+  return pool.exists(sql<queries.One>`SELECT 1 as "one"`);
 }
 
 export declare namespace queries {

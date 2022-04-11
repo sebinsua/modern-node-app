@@ -1,11 +1,9 @@
 import { sql } from 'slonik';
 
-import { connection } from 'modules/database';
+import { pool } from 'modules/database';
 
 export async function getPgTables() {
-  return connection.many(
-    sql<queries.PgTable>`SELECT * FROM pg_catalog.pg_tables`
-  );
+  return pool.many(sql<queries.PgTable>`SELECT * FROM pg_catalog.pg_tables`);
 }
 
 export declare namespace queries {
