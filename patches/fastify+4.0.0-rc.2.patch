@@ -1,5 +1,5 @@
 diff --git a/node_modules/fastify/lib/pluginUtils.js b/node_modules/fastify/lib/pluginUtils.js
-index 537f13d..27a1fa6 100644
+index c390e95..27a1fa6 100644
 --- a/node_modules/fastify/lib/pluginUtils.js
 +++ b/node_modules/fastify/lib/pluginUtils.js
 @@ -7,7 +7,6 @@ const {
@@ -10,7 +10,7 @@ index 537f13d..27a1fa6 100644
  
  function getMeta (fn) {
    return fn[Symbol.for('plugin-meta')]
-@@ -97,17 +96,6 @@ function _checkDecorators (that, instance, decorators, name) {
+@@ -97,18 +96,6 @@ function _checkDecorators (that, instance, decorators, name) {
    })
  }
  
@@ -20,7 +20,8 @@ index 537f13d..27a1fa6 100644
 -
 -  const requiredVersion = meta.fastify
 -
--  if (requiredVersion && !semver.satisfies(this.version, requiredVersion)) {
+-  const sanitizedVersion = this.version.replace(/-rc.\d+$/, '')
+-  if (requiredVersion && !semver.satisfies(sanitizedVersion, requiredVersion)) {
 -    throw new FST_ERR_PLUGIN_VERSION_MISMATCH(meta.name, requiredVersion, this.version)
 -  }
 -}
@@ -28,7 +29,7 @@ index 537f13d..27a1fa6 100644
  function registerPluginName (fn) {
    const meta = getMeta(fn)
    if (!meta) return
-@@ -119,7 +107,6 @@ function registerPluginName (fn) {
+@@ -120,7 +107,6 @@ function registerPluginName (fn) {
  
  function registerPlugin (fn) {
    registerPluginName.call(this, fn)
