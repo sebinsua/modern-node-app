@@ -1,6 +1,6 @@
 import { fetch } from 'undici';
 import { randomUUID } from 'crypto';
-import { requestContext } from 'fastify-request-context';
+import { requestContext } from '@fastify/request-context';
 
 import { dedupeError, logger } from './logger';
 

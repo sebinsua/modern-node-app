@@ -1,6 +1,6 @@
 // Inlined from https://github.com/turkerdev/fastify-type-provider-zod
 import fp from 'fastify-plugin';
-import swagger from 'fastify-swagger';
+import swagger from '@fastify/swagger';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import type { FastifySchemaCompiler } from 'fastify';
@@ -8,12 +8,20 @@ import type {
   FastifySchemaValidationError,
   FastifySerializerCompiler,
 } from 'fastify/types/schema';
-import type { ZodAny } from 'zod';
+import type { ZodType, ZodTypeDef, ZodAny } from 'zod';
+import type { JsonSchema7Type } from 'zod-to-json-schema/src/parseDef';
 
 export type SchemaErrorFormatterFn = (
   errors: FastifySchemaValidationError[],
   dataVar: string
 ) => Error;
+
+function toOpenApi3(
+  schema: ZodType<any, ZodTypeDef, any>
+): { $schema: 'http://json-schema.org/draft-07/schema#' } & JsonSchema7Type {
+  // @ts-ignore
+  return zodToJsonSchema(schema, { target: 'openApi3' });
+}
 
 // TODO: This isn't being called and needs to be rewritten for `zod`.
 //       There's potentially a bug in the alpha of `fastify` that needs
@@ -84,19 +92,19 @@ export const fastifyZod = fp(async (app, options: any) => {
 
       if (params) {
         // @ts-ignore
-        transformedSchema.params = zodToJsonSchema(params as any);
+        transformedSchema.params = toOpenApi3(params);
       }
       if (body) {
         // @ts-ignore
-        transformedSchema.body = zodToJsonSchema(body as any);
+        transformedSchema.body = toOpenApi3(body);
       }
       if (querystring) {
         // @ts-ignore
-        transformedSchema.querystring = zodToJsonSchema(querystring as any);
+        transformedSchema.querystring = toOpenApi3(querystring);
       }
       if (headers) {
         // @ts-ignore
-        transformedSchema.headers = zodToJsonSchema(headers as any);
+        transformedSchema.headers = toOpenApi3(headers);
       }
       if (response) {
         // @ts-ignore
@@ -104,7 +112,8 @@ export const fastifyZod = fp(async (app, options: any) => {
           Object.entries(response as any).map(
             ([statusCode, statusResponse]) => [
               statusCode,
-              zodToJsonSchema(statusResponse as any),
+              // @ts-ignore
+              toOpenApi3(statusResponse),
             ]
           )
         );

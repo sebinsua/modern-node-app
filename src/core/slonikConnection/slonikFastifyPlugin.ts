@@ -1,7 +1,7 @@
 // Inlined from https://github.com/autotelic/fastify-slonik
 import fp from 'fastify-plugin';
 import { createPool } from 'slonik';
-import { requestContext } from 'fastify-request-context';
+import { requestContext } from '@fastify/request-context';
 
 import type { DatabasePool, ClientConfiguration } from 'slonik';
 
@@ -10,7 +10,7 @@ declare module 'fastify' {
     slonikConnectionPool: DatabasePool;
   }
 }
-declare module 'fastify-request-context' {
+declare module '@fastify/request-context' {
   interface RequestContextData {
     slonikConnectionPool: DatabasePool;
   }

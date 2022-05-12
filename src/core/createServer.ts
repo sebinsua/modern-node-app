@@ -1,7 +1,7 @@
 import { fastify as createFastify } from 'fastify';
 import gracefulShutdown from 'http-graceful-shutdown';
-import fastifyCors from 'fastify-cors';
-import { fastifyRequestContextPlugin } from 'fastify-request-context';
+import fastifyCors from '@fastify/cors';
+import { fastifyRequestContextPlugin } from '@fastify/request-context';
 import customHealthCheck from 'fastify-custom-healthcheck';
 import { createFastifyLogger } from '@roarr/fastify';
 import { randomUUID } from 'crypto';
@@ -13,7 +13,7 @@ import { fastifyZod, RoutesPluginFn } from './zodValidator';
 
 import type { ClientConfiguration } from 'slonik';
 
-import type { FastifyCorsOptions } from 'fastify-cors';
+import type { FastifyCorsOptions } from '@fastify/cors';
 
 export interface CreateServerOptions {
   name: string;
