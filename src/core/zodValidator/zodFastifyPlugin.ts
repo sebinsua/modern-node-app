@@ -3,18 +3,18 @@ import fp from 'fastify-plugin';
 import swagger from '@fastify/swagger';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-import type { FastifySchemaCompiler } from 'fastify';
+import type {
+  FastifySchemaCompiler,
+  FastifyError,
+  FastifyRequest,
+  FastifyReply,
+} from 'fastify';
 import type {
   FastifySchemaValidationError,
   FastifySerializerCompiler,
 } from 'fastify/types/schema';
-import type { ZodType, ZodTypeDef, ZodAny } from 'zod';
+import type { ZodType, ZodTypeDef, ZodAny, ZodError } from 'zod';
 import type { JsonSchema7Type } from 'zod-to-json-schema/src/parseDef';
-
-export type SchemaErrorFormatterFn = (
-  errors: FastifySchemaValidationError[],
-  dataVar: string
-) => Error;
 
 function toOpenApi3(
   schema: ZodType<any, ZodTypeDef, any>
@@ -22,6 +22,11 @@ function toOpenApi3(
   // @ts-ignore
   return zodToJsonSchema(schema, { target: 'openApi3' });
 }
+
+export type SchemaErrorFormatterFn = (
+  errors: FastifySchemaValidationError[],
+  dataVar: string
+) => Error;
 
 // TODO: This isn't being called and needs to be rewritten for `zod`.
 //       There's potentially a bug in the alpha of `fastify` that needs
@@ -39,6 +44,31 @@ export const zodSchemaErrorFormatter: SchemaErrorFormatterFn = (
   }
 
   return new Error(text.slice(0, -separator.length));
+};
+
+function isZodError(
+  error: Error
+): error is ZodError & { validationContext: string } {
+  return error.name === 'ZodError';
+}
+
+export type ErrorFormatterFn = (
+  error: FastifyError,
+  request: FastifyRequest,
+  reply: FastifyReply
+) => any | Promise<any>;
+
+export const zodErrorHandler: ErrorFormatterFn = (error, _request, reply) => {
+  if (isZodError(error)) {
+    reply.status(400).send({
+      statusCode: 400,
+      error: 'Bad Request',
+      cause: {
+        context: error.validationContext,
+        issues: error.issues,
+      },
+    });
+  }
 };
 
 export const zodValidatorCompiler: FastifySchemaCompiler<ZodAny> =

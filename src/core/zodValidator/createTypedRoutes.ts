@@ -5,6 +5,7 @@ import type {
   FastifyTypeProviderDefault,
 } from 'fastify';
 import {
+  zodErrorHandler,
   zodSchemaErrorFormatter,
   zodSerializerCompiler,
   zodValidatorCompiler,
@@ -45,9 +46,10 @@ export function createTypedRoutesPlugin(
 ): RoutesPluginFn {
   return (app, options, done) => {
     app
-      .setSchemaErrorFormatter(zodSchemaErrorFormatter)
       .setValidatorCompiler(zodValidatorCompiler)
-      .setSerializerCompiler(zodSerializerCompiler);
+      .setSerializerCompiler(zodSerializerCompiler)
+      .setSchemaErrorFormatter(zodSchemaErrorFormatter)
+      .setErrorHandler(zodErrorHandler);
 
     const typedApp = app.withTypeProvider<ZodTypeProvider>();
 
