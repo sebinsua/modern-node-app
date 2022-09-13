@@ -9,9 +9,9 @@
     "dev": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true tsx watch src/startServer.ts --clear-screen=false | roarr pretty-print",
     "start": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true tsx src/startServer.ts",
     "test": "jest --watch",
-    "generate-types": "slonik-typegen generate --connection-uri postgres://localhost:5432/postgres",
     "prepare": "husky install",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "typecheck": "tsc --noEmit"
   },
   "author": "Seb Insua",
   "license": "MIT",
@@ -45,7 +45,6 @@
   },
   "devDependencies": {
     "@roarr/cli": "^5.7.0",
-    "@slonik/typegen": "^0.14.2",
     "husky": "^8.0.1",
     "jest": "^29.0.3",
     "patch-package": "^6.4.7",
