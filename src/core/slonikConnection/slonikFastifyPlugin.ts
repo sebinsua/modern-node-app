@@ -23,7 +23,7 @@ export interface FastifySlonikOptions {
 
 export const fastifySlonik = fp(async (app, options: any) => {
   const { connectionString, poolOptions = {} } = options;
-  const connectionPool = createPool(connectionString, poolOptions);
+  const connectionPool = await createPool(connectionString, poolOptions);
 
   app.decorate('slonikConnectionPool', connectionPool);
   app.addHook('onRequest', (request, _, done) => {
