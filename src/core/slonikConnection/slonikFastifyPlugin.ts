@@ -1,5 +1,7 @@
 // Inlined from https://github.com/autotelic/fastify-slonik
 import fp from 'fastify-plugin';
+import postgres from 'postgres';
+import { createPostgresBridge } from 'postgres-bridge';
 import { createPool } from 'slonik';
 import { requestContext } from '@fastify/request-context';
 
@@ -23,7 +25,11 @@ export interface FastifySlonikOptions {
 
 export const fastifySlonik = fp(async (app, options: any) => {
   const { connectionString, poolOptions = {} } = options;
-  const connectionPool = await createPool(connectionString, poolOptions);
+
+  const connectionPool = await createPool(connectionString, {
+    ...poolOptions,
+    PgPool: createPostgresBridge(postgres),
+  });
 
   app.decorate('slonikConnectionPool', connectionPool);
   app.addHook('onRequest', (request, _, done) => {
