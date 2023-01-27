@@ -1,7 +1,12 @@
 import { serializeError } from 'serialize-error';
 import { createQueryLoggingInterceptor } from 'slonik-interceptor-query-logging';
 
-import { getApplicationName, createServer, getConfig } from 'core';
+import {
+  setupGlobalErrorHandler,
+  getApplicationName,
+  getConfig,
+  createServer,
+} from 'core';
 import { serverLog } from 'modules/logger';
 
 import { AppConfig } from './AppConfig';
@@ -9,17 +14,7 @@ import { routes } from './routes';
 
 import type { Interceptor } from 'slonik';
 
-process.on('uncaughtException', (error, origin) => {
-  serverLog.fatal(
-    { error: serializeError(error) },
-    `Uncaught exception at ${origin}`
-  );
-  process.exit(1);
-});
-process.on('unhandledRejection', (reason) => {
-  serverLog.fatal({ error: serializeError(reason) }, `Uncaught rejection`);
-  process.exit(1);
-});
+setupGlobalErrorHandler();
 
 (async () => {
   try {

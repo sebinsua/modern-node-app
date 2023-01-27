@@ -1,3 +1,4 @@
+export * from './setupGlobalErrorHandler';
 export * from './getApplicationName';
 export * from './getConfig';
 export * from './createServer';
