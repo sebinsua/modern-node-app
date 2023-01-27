@@ -1,6 +1,6 @@
 import type {
   FastifyInstance,
-  FastifyLoggerInstance,
+  FastifyBaseLogger,
   FastifyPluginOptions,
   FastifyTypeProviderDefault,
 } from 'fastify';
@@ -24,7 +24,7 @@ export type RoutesPluginFn = (
     Server,
     IncomingMessage,
     ServerResponse,
-    FastifyLoggerInstance,
+    FastifyBaseLogger,
     FastifyTypeProviderDefault
   >,
   options: FastifyPluginOptions,
@@ -37,7 +37,7 @@ export function createTypedRoutesPlugin(
       Server,
       IncomingMessage,
       ServerResponse,
-      FastifyLoggerInstance,
+      FastifyBaseLogger,
       ZodTypeProvider
     >,
     options: FastifyPluginOptions,

@@ -1,7 +1,7 @@
 import { fastify as createFastify } from 'fastify';
 import gracefulShutdown from 'http-graceful-shutdown';
 import fastifyCors from '@fastify/cors';
-import { fastifyRequestContextPlugin } from '@fastify/request-context';
+import { fastifyRequestContext } from '@fastify/request-context';
 import customHealthCheck from 'fastify-custom-healthcheck';
 import { createFastifyLogger } from '@roarr/fastify';
 import { randomUUID } from 'crypto';
@@ -44,7 +44,7 @@ export async function createServer(
     },
   });
 
-  await app.register(fastifyRequestContextPlugin);
+  await app.register(fastifyRequestContext);
   app
     .addHook('onRequest', (request, _, done) => {
       const correlationId = request.headers['correlation-id'] ?? randomUUID();

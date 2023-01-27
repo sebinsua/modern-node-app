@@ -1,6 +1,7 @@
 // Inlined from https://github.com/turkerdev/fastify-type-provider-zod
 import fp from 'fastify-plugin';
 import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import type {
@@ -29,8 +30,6 @@ export type SchemaErrorFormatterFn = (
 ) => Error;
 
 // TODO: This isn't being called and needs to be rewritten for `zod`.
-//       There's potentially a bug in the alpha of `fastify` that needs
-//       to be resolved for it to be used.
 export const zodSchemaErrorFormatter: SchemaErrorFormatterFn = (
   errors,
   dataVar
@@ -102,7 +101,6 @@ export const zodSerializerCompiler: FastifySerializerCompiler<ZodAny> =
 export const fastifyZod = fp(async (app, options: any) => {
   // @ts-ignore
   await app.register(swagger, {
-    exposeRoute: true,
     openapi: {
       info: {
         title: options['title'],
@@ -155,4 +153,6 @@ export const fastifyZod = fp(async (app, options: any) => {
       };
     },
   });
+
+  await app.register(swaggerUi);
 });
