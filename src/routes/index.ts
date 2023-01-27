@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
-import { createTypedRoutesPlugin } from '../core';
+import { createTypedRoutesPlugin } from 'core';
+
 import { getPgTables, PgTable } from './getRoot';
 
-export default createTypedRoutesPlugin((app, _, done) => {
+export const routes = createTypedRoutesPlugin((app, _, done) => {
   app.route({
     method: 'GET',
     url: '/',

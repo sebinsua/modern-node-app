@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "description": "A modern Node app",
   "workspaces": [
-    "src/modules"
+    "workspaces/core",
+    "workspaces/modules"
   ],
   "scripts": {
     "dev": "NODE_OPTIONS='--require dotenv/config' ROARR_LOG=true tsx watch src/startServer.ts --clear-screen=false | roarr pretty-print",
@@ -22,7 +23,7 @@
     "@fastify/swagger": "8.3.0",
     "@fastify/swagger-ui": "^1.3.0",
     "@roarr/fastify": "^1.2.1",
-    "@tsconfig/node16-strictest": "^1.0.4",
+    "@tsconfig/node18-strictest": "^1.0.0",
     "@types/fs-extra": "^11.0.1",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.11.18",

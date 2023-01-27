@@ -1,11 +1,11 @@
-import { z } from 'zod';
 import { serializeError } from 'serialize-error';
 import { createQueryLoggingInterceptor } from 'slonik-interceptor-query-logging';
 
+import { getApplicationName, createServer, getConfig } from 'core';
 import { serverLog } from 'modules/logger';
 
-import { getApplicationName, createServer, getConfig } from './core';
-import routes from './routes';
+import { AppConfig } from './AppConfig';
+import { routes } from './routes';
 
 import type { Interceptor } from 'slonik';
 
@@ -24,22 +24,7 @@ process.on('unhandledRejection', (reason) => {
 (async () => {
   try {
     const applicationName = await getApplicationName();
-
-    const config = getConfig(
-      z.object({
-        APP_HOST: z.string(),
-        APP_PORT: z.string().regex(/^\d+$/),
-        APP_BASE_URL: z.string().optional(),
-        APP_POSTGRES_CONNECTION_STRING: z.string().url(),
-        APP_POSTGRES_QUERY_LOGGING: z
-          .union([z.literal('true'), z.literal('false')])
-          .default('false'),
-        APP_CORS_CREDENTIALS: z
-          .union([z.literal('true'), z.literal('false')])
-          .default('true'),
-        APP_CORS_ORIGIN: z.string().optional(),
-      })
-    );
+    const config = getConfig(AppConfig);
 
     const app = await createServer(routes, {
       name: applicationName,
@@ -49,7 +34,7 @@ process.on('unhandledRejection', (reason) => {
         connectionString: config.APP_POSTGRES_CONNECTION_STRING,
         poolOptions: {
           interceptors: [
-            config.APP_POSTGRES_QUERY_LOGGING === 'true'
+            config.APP_POSTGRES_QUERY_LOGGING === true
               ? createQueryLoggingInterceptor()
               : undefined,
           ].filter(
@@ -59,7 +44,7 @@ process.on('unhandledRejection', (reason) => {
         },
       },
       cors: {
-        credentials: config.APP_CORS_CREDENTIALS !== 'false',
+        credentials: config.APP_CORS_CREDENTIALS === true,
         origin:
           typeof config.APP_CORS_ORIGIN === 'string'
             ? config.APP_CORS_ORIGIN.split(',')
@@ -69,7 +54,7 @@ process.on('unhandledRejection', (reason) => {
 
     await app.listen({
       host: config.APP_HOST,
-      port: Number(config.APP_PORT),
+      port: config.APP_PORT,
     });
   } catch (error) {
     serverLog.fatal({ error: serializeError(error) }, 'Error starting server!');
