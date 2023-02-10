@@ -14,6 +14,7 @@ import {
 import type { Server, IncomingMessage, ServerResponse } from 'http';
 import type { FastifyTypeProvider } from 'fastify';
 import type { z, ZodTypeAny } from 'zod';
+import { serializeError } from 'serialize-error';
 
 export interface ZodTypeProvider extends FastifyTypeProvider {
   output: this['input'] extends ZodTypeAny ? z.infer<this['input']> : never;
@@ -49,7 +50,18 @@ export function createTypedRoutesPlugin(
       .setValidatorCompiler(zodValidatorCompiler)
       .setSerializerCompiler(zodSerializerCompiler)
       .setSchemaErrorFormatter(zodSchemaErrorFormatter)
-      .setErrorHandler(zodErrorHandler);
+      .setErrorHandler(function (error, request, reply) {
+        this.log.error(serializeError(error), error.message);
+
+        zodErrorHandler(error, request, reply);
+
+        if (!reply.sent) {
+          const statusCode = error.statusCode ?? 500;
+          reply.status(statusCode).send({
+            error: error.message,
+          });
+        }
+      });
 
     const typedApp = app.withTypeProvider<ZodTypeProvider>();
 

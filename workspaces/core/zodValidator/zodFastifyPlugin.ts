@@ -60,7 +60,6 @@ export type ErrorFormatterFn = (
 export const zodErrorHandler: ErrorFormatterFn = (error, _request, reply) => {
   if (isZodError(error)) {
     reply.status(400).send({
-      statusCode: 400,
       error: 'Bad Request',
       cause: {
         context: error.validationContext,

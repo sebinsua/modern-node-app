@@ -31,10 +31,14 @@ export async function createServer(
   options: CreateServerOptions
 ) {
   const requestIdLogLabel = 'requestId';
+  const requestIdHeader = 'request-id';
+  const genReqId = () => randomUUID();
 
   const app = createFastify({
-    logger: createFastifyLogger(serverLog, { requestIdLogLabel }),
+    genReqId,
+    requestIdHeader,
     requestIdLogLabel,
+    logger: createFastifyLogger(serverLog, { requestIdLogLabel }),
     ignoreTrailingSlash: true,
   });
 
@@ -47,13 +51,16 @@ export async function createServer(
   await app.register(fastifyRequestContext);
   app
     .addHook('onRequest', (request, _, done) => {
+      const requestId = request.id;
       const correlationId = request.headers['correlation-id'] ?? randomUUID();
+      request.requestContext.set('requestId', requestId);
       request.requestContext.set('correlationId', correlationId);
       done();
     })
     .addHook('preHandler', (request, _, done) => {
+      const requestId = request.requestContext.get('requestId');
       const correlationId = request.requestContext.get('correlationId');
-      void serverLog.adopt(() => done(), { correlationId });
+      void serverLog.adopt(() => done(), { requestId, correlationId });
     });
 
   await app.register(fastifyCors, options.cors);
