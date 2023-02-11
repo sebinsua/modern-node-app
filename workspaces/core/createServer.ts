@@ -43,6 +43,8 @@ export async function createServer(
   });
 
   const shutdown = gracefulShutdown(app.server, {
+    development: process.env['NODE_ENV'] === 'development' ?? false,
+    forceExit: true,
     finally() {
       serverLog.info('Graceful shutdown of the server completed');
     },
